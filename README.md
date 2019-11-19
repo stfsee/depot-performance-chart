@@ -5,7 +5,7 @@ The least performance 20% are red, next orange, yellow, light green up to the 20
 
 Create the chart:
 - create comdirect Musterportfolio
-- create there "Meine Ansicht" with Columns "3 Monate, 1 Jahr, 3 Jahre"
+- create there "Meine Ansicht" with Columns "Perf. 3 Monate, Perf. 1 Jahr, Perf. 3 Jahre"
 - sort by name
 - export as csv
 - add missing performances in the specific notebook cell
@@ -13,6 +13,6 @@ Create the chart:
 
 Remarks:
 - for initial try copy the given musterdepot_Komplett_meineuebersicht_example.csv to musterdepot_Komplett_meineuebersicht.csv and start the script
-- be careful when adding missing values
-- the portfolio value that's written to the file is not the real value but a value showing a depot-bubble in appropiate size
+- be careful when adding missing values: if performance values for 3 year performance are missing better chose another stock exchange
+- the portfolio value that's written to the file is not the real value (i.e. not the sum of all values) but a value showing a depot-bubble in appropiate size
 - the color bubbles are added to the chart to sort the legend
