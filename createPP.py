@@ -74,17 +74,18 @@ def shortname(longname):
     return wkn2short[longname]
 
 
-# In[7]:
+# In[13]:
 
 
 #filename = "musterdepot_Komplett_meineuebersicht_20191112_1043.csv"
 filename = "musterdepot_Komplett_meineuebersicht.csv"
-data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=[0,2,4,19,20,21])
+#data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=[0,2,4,19,20,21])
+data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=["Stück","WKN","Aktuell","Perf. 3 Monate","Perf. 1 Jahr"])
 data['Wert'] = data['Stück']*data['Aktuell']
 data['Name'] = data['WKN'].apply(lambda x: shortname(x[0:23]))
 
 
-# In[8]:
+# In[14]:
 
 
 a='Amundi Index Solutions'
