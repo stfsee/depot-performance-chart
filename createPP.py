@@ -4,6 +4,7 @@
 # ## Next Steps
 # 
 # ## History
+# - 27.04.20: dynamic axes
 # - 20.11.19: replace missing 3YPerf-values by 3YPerf-mean
 # - 20.11.19: add parameter for 3MPerf calculation by quantiles or absolute values
 # - 19.11.19: removed missing values addition
@@ -11,16 +12,17 @@
 # - 17.11.19: 3M Performance now in 20% quantiles
 # - 16.11.19: initial version
 
-# In[1]:
+# In[101]:
 
 
 import datetime
 import pandas as pd
 import sys
 from numpy import nan as NA
+import math
 
 
-# In[2]:
+# In[102]:
 
 
 useQuantiles = True
@@ -32,7 +34,7 @@ if 'absolut' in arg:
         useQuantiles = False
 
 
-# In[3]:
+# In[103]:
 
 
 def floatconv(val):
@@ -45,7 +47,7 @@ def floatconv(val):
         print("VALUE NOT USABLE for floatconv: #{}#".format(val))
 
 
-# In[4]:
+# In[104]:
 
 
 def percentconv(val):
@@ -58,14 +60,14 @@ def percentconv(val):
         print("VALUE NOT USABLE for percentconv: #{}#".format(val))
 
 
-# In[5]:
+# In[105]:
 
 
 intconv = lambda val: 0 if len(str(val)) < 2 else float(str(val).replace('.',''))
 converter = {'Aktuell':floatconv, 'Wert in EUR':floatconv, 'Perf. 3 Monate':percentconv,              'Perf. 1 Jahr':percentconv, 'Perf. 3 Jahre':percentconv}
 
 
-# In[6]:
+# In[106]:
 
 
 wkn2short = pd.read_csv('wkn2names.csv', header=None, sep=':', index_col=0, squeeze=True).to_dict()
@@ -74,18 +76,18 @@ def shortname(longname):
     return wkn2short[longname]
 
 
-# In[13]:
+# In[107]:
 
 
 #filename = "musterdepot_Komplett_meineuebersicht_20191112_1043.csv"
 filename = "musterdepot_Komplett_meineuebersicht.csv"
 #data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=[0,2,4,19,20,21])
-data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=["Stück","WKN","Aktuell","Perf. 3 Monate","Perf. 1 Jahr"])
+data = pd.read_csv(filename, sep=";", header=2, encoding="iso-8859-1", converters = converter, usecols=["Stück","WKN","Aktuell","Perf. 3 Monate","Perf. 1 Jahr","Perf. 3 Jahre"])
 data['Wert'] = data['Stück']*data['Aktuell']
 data['Name'] = data['WKN'].apply(lambda x: shortname(x[0:23]))
 
 
-# In[14]:
+# In[108]:
 
 
 a='Amundi Index Solutions'
@@ -94,7 +96,7 @@ b
 data
 
 
-# In[9]:
+# In[109]:
 
 
 # add missing values: (better than adding missing values is selecting a better stock exchange)
@@ -109,13 +111,32 @@ data
 data['Perf. 3 Jahre'].fillna(data['Perf. 3 Jahre'].mean(),inplace=True)
 
 
-# In[10]:
+# In[110]:
 
 
 data
 
 
-# In[11]:
+# In[111]:
+
+
+x_min = math.floor(data["Perf. 3 Jahre"].min()/10)*10
+x_max = math.ceil(data["Perf. 3 Jahre"].max()/10)*10
+y_min = math.floor(data["Perf. 1 Jahr"].min()/10)*10
+y_max = math.ceil(data["Perf. 1 Jahr"].max()/10)*10
+
+
+# In[112]:
+
+
+def get_range_str(min,max):
+    range_str = str(min)
+    for i in range(min,max,10):
+        range_str=range_str+","+str(i+10)
+    return range_str
+
+
+# In[113]:
 
 
 def perf2String(val,quantiles):
@@ -141,7 +162,7 @@ def perf2Stringabsolut(val):
     return 'highest'
 
 
-# In[12]:
+# In[114]:
 
 
 if useQuantiles == True:
@@ -151,7 +172,7 @@ else:
     data['Perf3MString'] = data['Perf. 3 Monate'].apply(lambda x: perf2Stringabsolut(x))
 
 
-# In[13]:
+# In[115]:
 
 
 data['Value3MAgo'] = data['Wert']/(1+data['Perf. 3 Monate']/100)
@@ -169,14 +190,14 @@ print("Portfolio total value: {0:7.2f}, 3-month-performance: {1:3.2f}% , 1Y-perf
       .format(valuetoday,p3m,p1y,p3y))
 
 
-# In[14]:
+# In[116]:
 
 
 def rd(val):
     return int(round(val))
 
 
-# In[15]:
+# In[117]:
 
 
 #['Name','3JPerf','1J Perf','3M Perf','EUR'],
@@ -184,14 +205,14 @@ def rd(val):
 
 #lines with values:
 values=""
-for i, (index, row) in enumerate(data.iterrows()):
+for i, (index, row) in enumerate(data.sort_values(by=['Perf. 3 Monate']).iterrows()):
     values += "['"+row['Name']+"',"     +str(rd(row['Perf. 3 Jahre']))+","     +str(rd(row['Perf. 1 Jahr']))+",'"     +row['Perf3MString']+"',"     +str(rd(row['Wert']))+"],"     +'\n'
 
 #Depot line with 1y and 3y performance and 3m as part of the name (special color)    
 values += "['Depot 3M:"+str(round(p3m,2))+"%'," +str(rd(p3y))+"," +str(rd(p1y))+"," +"'Depot','" +str(50000) +"']\n"
 
 
-# In[16]:
+# In[118]:
 
 
 # read template, replace placeholder and write output file:
@@ -207,5 +228,9 @@ with open('portfolioPerformance_in.html','rt') as fin, open('portfolioPerformanc
                 line = line.replace('#$2',str(quantiles.values))
             else:
                 line = line.replace('#$2','[-4;0;2;4[')
+        if '#$3' in line:
+            line = line.replace('#$3',get_range_str(x_min,x_max))
+        if '#$4' in line:
+            line = line.replace('#$4',get_range_str(y_min,y_max))
         fout.write(line)
 
